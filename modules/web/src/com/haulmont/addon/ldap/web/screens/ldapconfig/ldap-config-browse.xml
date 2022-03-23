@@ -43,6 +43,7 @@
                     width="100%"
                     dataContainer="ldapConfigsDc">
             <actions>
+                <action id="create" type="create"/>
                 <action id="edit" type="edit"/>
             </actions>
             <columns>
@@ -52,6 +53,7 @@
             <rowsCount/>
             <buttonsPanel id="buttonsPanel"
                           alwaysVisible="true">
+                <button id="createBtn" action="ldapConfigsTable.create"/>
                 <button id="editBtn" action="ldapConfigsTable.edit"/>
             </buttonsPanel>
         </groupTable>

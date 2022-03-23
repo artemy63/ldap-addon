@@ -139,6 +139,7 @@ create table LDAP_LDAP_CONFIG (
     LANGUAGE_ATTRIBUTE varchar(255),
     INACTIVE_USER_ATTRIBUTE varchar(255),
     USER_BASE varchar(255),
+    SYS_TENANT_ID varchar(255),
     --
     primary key (ID)
 )^
