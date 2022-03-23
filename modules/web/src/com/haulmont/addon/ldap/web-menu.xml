@@ -21,5 +21,7 @@
         <item screen="ldap$LdapPropertiesConfig.edit"/>
         <item screen="ldap$matchingRuleScreen"/>
         <item screen="ldap$UserSynchronizationLog.browse"/>
+        <item screen="ldap$LdapPropertiesConfig.browse"
+              caption="mainMsg://menu_config.ldap$LdapPropertiesConfig.browse"/>
     </menu>
 </menu-config>

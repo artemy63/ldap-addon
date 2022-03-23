@@ -20,6 +20,7 @@ import com.haulmont.chile.core.annotations.MetaProperty;
 import com.haulmont.cuba.core.entity.BaseUuidEntity;
 import com.haulmont.cuba.core.entity.Updatable;
 import com.haulmont.cuba.core.entity.Versioned;
+import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -107,6 +108,10 @@ public class LdapConfig extends BaseUuidEntity implements Versioned, Updatable {
     @Version
     @Column(name = "VERSION", nullable = false)
     private Integer version;
+
+    @SystemLevel
+    @Column(name = "SYS_TENANT_ID")
+    private String sysTenantId;
 
     public void setDefaultAccessGroupName(String defaultAccessGroupName) {
         this.defaultAccessGroupName = defaultAccessGroupName;
@@ -313,5 +318,11 @@ public class LdapConfig extends BaseUuidEntity implements Versioned, Updatable {
         return version;
     }
 
+    public String getSysTenantId() {
+        return sysTenantId;
+    }
 
+    public void setSysTenantId(String sysTenantId) {
+        this.sysTenantId = sysTenantId;
+    }
 }
