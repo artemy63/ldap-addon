@@ -122,7 +122,7 @@ public class MatchingRuleTest {
 	@Test
 	public void testDefaultRule() {
 		try (Transaction ignored = persistence.createTransaction()) {
-			LdapConfig ldapConfig = ldapConfigDao.getLdapConfig();
+			LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
 			ldapConfig.setLoginAttribute("uid");
 			daoHelper.persistOrMerge(ldapConfig);
 
@@ -533,7 +533,7 @@ public class MatchingRuleTest {
 	@Test
 	public void intInactiveUserTest() {
 		try (Transaction ignored = persistence.createTransaction()) {
-			LdapConfig ldapConfig = ldapConfigDao.getLdapConfig();
+			LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
 			ldapConfig.setLoginAttribute("uid");
 			ldapConfig.setInactiveUserAttribute("roomNumber");
 			daoHelper.persistOrMerge(ldapConfig);
@@ -590,7 +590,7 @@ public class MatchingRuleTest {
 	@Test
 	public void disabledLoginTest() {
 		try (Transaction tx = persistence.createTransaction()) {
-			LdapConfig ldapConfig = ldapConfigDao.getLdapConfig();
+			LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
 			ldapConfig.setLoginAttribute("uid");
 			ldapConfig.setInactiveUserAttribute("roomNumber");
 			daoHelper.persistOrMerge(ldapConfig);
@@ -636,7 +636,7 @@ public class MatchingRuleTest {
 	@Test
 	public void noPrivilegesChangedTest() {
 		try (Transaction tx = persistence.createTransaction()) {
-			LdapConfig ldapConfig = ldapConfigDao.getLdapConfig();
+			LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
 			ldapConfig.setLoginAttribute("uid");
 			ldapConfig.setInactiveUserAttribute("roomNumber");
 			daoHelper.persistOrMerge(ldapConfig);
@@ -764,7 +764,7 @@ public class MatchingRuleTest {
 	}
 
 	private LdapConfig setupLdapConfig(String loginAttribute, String inactiveUserAttribute, String middleNameAttribute) {
-		LdapConfig ldapConfig = ldapConfigDao.getLdapConfig();
+		LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
 		ldapConfig.setLoginAttribute(loginAttribute);
 		ldapConfig.setInactiveUserAttribute(inactiveUserAttribute);
 		ldapConfig.setMiddleNameAttribute(middleNameAttribute);

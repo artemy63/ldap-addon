@@ -110,7 +110,7 @@ public class LdapTestContainer extends TestContainer {
 				.forEach(this::deleteRecord);
 		users.forEach(this::deleteRecord);
 
-		LdapConfig ldapConfig = AppBeans.get(LdapConfigDao.class).getLdapConfig();
+		LdapConfig ldapConfig = AppBeans.get(LdapConfigDao.class).getDefaultLdapConfig();
 		ldapConfig.setLoginAttribute("sAMAccountName");
 		ldapConfig.setInactiveUserAttribute("userAccountControl");
 		ldapConfig.setMiddleNameAttribute("middleName");

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright (c) 2008-2019 Haulmont.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~  http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<window xmlns="http://schemas.haulmont.com/cuba/screen/window.xsd"
+        caption="msg://editorCaption"
+        messagesPack="com.haulmont.addon.ldap.web.screens.ldapconfig">
+    <data>
+        <instance id="ldapConfigDs" class="com.haulmont.addon.ldap.entity.LdapConfig" view="_local">
+            <loader/>
+        </instance>
+        <collection id="ldapUserAttributesDs" class="com.haulmont.addon.ldap.entity.LdapUserAttribute">
+            <loader>
+                <query>
+                    <![CDATA[select e from ldap$LdapUserAttribute e]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <dialogMode height="600"
+                width="800"/>
+    <layout spacing="true">
+        <scrollBox height="100%">
+            <groupBox caption="msg://connectionSettings"
+                      spacing="true">
+                <form id="connectionSettingsForm" dataContainer="ldapConfigDs">
+                    <column width="250px">
+                        <textField id="contextSourceUrlField"
+                                   caption="msg://contextSourceUrl"
+                                   description="msg://settingsScreenUrlDescr"
+                                   property="contextSourceUrl"
+                                   required="true"/>
+                        <textField id="contextSourceUserNameField"
+                                   caption="msg://contextSourceUserName"
+                                   description="msg://settingsScreenUserDescr"
+                                   property="contextSourceUserName"
+                                   required="true"/>
+                        <textField id="contextSourceBaseField"
+                                   caption="msg://contextSourceBase"
+                                   description="msg://settingsScreenBaseDescr"
+                                   property="contextSourceBase"
+                                   required="true"/>
+                        <passwordField id="contextSourcePasswordField"
+                                       caption="msg://contextPassword"
+                                       description="msg://settingsScreenPasswordDescr"
+                                       property="contextSourcePassword"
+                                       required="true"/>
+                        <textField id="tenantField"
+                                   caption="msg://tenantId"
+                                   property="sysTenantId"
+                                   required="true"/>
+                    </column>
+                </form>
+            </groupBox>
+            <groupBox caption="msg://attributeSettings"
+                      spacing="true">
+                <hbox spacing="true">
+                    <form id="attributeSettingsFieldGroup1" dataContainer="ldapConfigDs">
+                        <column width="250px">
+                            <textField id="loginAttributeField"
+                                       caption="msg://loginAttribute"
+                                       description="msg://loginAttributeHint"
+                                       property="loginAttribute"/>
+                            <textField id="cnAttributeField"
+                                       caption="msg://cnAttribute"
+                                       description="msg://cnAttributeHint"
+                                       property="cnAttribute"/>
+                            <textField id="givenNameAttributeField"
+                                       caption="msg://givenNameAttribute"
+                                       description="msg://givenNameAttributeHint"
+                                       property="givenNameAttribute"/>
+                            <textField id="middleNameAttributeField"
+                                       caption="msg://middleNameAttribute"
+                                       description="msg://middleNameAttributeHint"
+                                       property="middleNameAttribute"/>
+                            <textField id="snAttributeField"
+                                       caption="msg://snAttribute"
+                                       description="msg://snAttributeHint"
+                                       property="snAttribute"/>
+                        </column>
+                    </form>
+                    <form id="attributeSettingsFieldGroup2" dataContainer="ldapConfigDs">
+                        <column>
+                            <textField id="emailAttributeField"
+                                       caption="msg://emailAttribute"
+                                       description="msg://emailAttributeHint"
+                                       property="emailAttribute"/>
+                            <textField id="memberOfAttributeField"
+                                       caption="msg://memberOfAttribute"
+                                       description="msg://memberOfAttributeHint"
+                                       property="memberOfAttribute"/>
+                            <textField id="accessGroupAttributeField"
+                                       caption="msg://accessGroupAttribute"
+                                       description="msg://accessGroupAttributeHint"
+                                       property="accessGroupAttribute"/>
+                            <textField id="positionAttributeField"
+                                       caption="msg://positionAttribute"
+                                       description="msg://positionAttributeHint"
+                                       property="positionAttribute"/>
+                            <textField id="languageAttributeField"
+                                       caption="msg://languageAttribute"
+                                       description="msg://languageAttributeHint"
+                                       property="languageAttribute"/>
+                        </column>
+                    </form>
+                    <form id="attributeSettingsFieldGroup3" dataContainer="ldapConfigDs">
+                        <column width="250px">
+                            <textField id="ouAttributeField"
+                                       caption="msg://ouAttribute"
+                                       description="msg://ouAttributeHint"
+                                       property="ouAttribute"/>
+                            <textField id="inactiveUserAttributeField"
+                                       caption="msg://inactiveUserAttribute"
+                                       description="msg://inactiveUserAttributeHint"
+                                       property="inactiveUserAttribute"/>
+                            <textField id="userBaseField"
+                                       caption="msg://userBase"
+                                       description="msg://userBaseHint"
+                                       property="userBase"/>
+                            <textField id="defaultAccessGroupNameField"
+                                       caption="msg://defaultGroupName"
+                                       description="msg://defaultGroupHint"
+                                       property="defaultAccessGroupName"/>
+                        </column>
+                    </form>
+                </hbox>
+            </groupBox>
+            <groupBox caption="msg://schemaSettings"
+                      spacing="true">
+                <hbox spacing="true">
+                    <form id="schemaSettingsFieldGroup1" dataContainer="ldapConfigDs">
+                        <column width="250px">
+                            <textField id="schemaBaseField"
+                                       caption="msg://schemaBase"
+                                       description="msg://schemaBaseHint"
+                                       property="schemaBase"/>
+                            <textField id="ldapUserObjectClassesField"
+                                       caption="msg://ldapUserObjectClasses"
+                                       description="msg://ldapUserObjectClassesHint"
+                                       property="ldapUserObjectClasses"/>
+                        </column>
+                    </form>
+                    <form id="schemaSettingsFieldGroup2" dataContainer="ldapConfigDs">
+                        <column width="250px">
+                            <textField id="objectClassPropertyNameField"
+                                       caption="msg://objectClassPropertyName"
+                                       description="msg://objectClassPropertyNameHint"
+                                       property="objectClassPropertyName"/>
+                            <textField id="attributePropertyNamesField"
+                                       caption="msg://attributePropertyNames"
+                                       description="msg://attributePropertyNamesHint"
+                                       property="attributePropertyNames"/>
+                        </column>
+                    </form>
+                </hbox>
+                <table id="schemaTabLdapAttributeTable"
+                       columnControlVisible="false"
+                       contextMenuEnabled="false"
+                       height="300px"
+                       multiselect="true"
+                       reorderingAllowed="false"
+                       settingsEnabled="false"
+                       sortable="false"
+                       width="100%"
+                       dataContainer="ldapUserAttributesDs">
+                    <actions>
+                        <action id="create"
+                                caption="123"/>
+                        <action id="remove"
+                                caption="123"/>
+                    </actions>
+                    <columns>
+                        <column id="attributeName"/>
+                    </columns>
+                    <rows/>
+                    <!--                        <rows datasource="ldapUserAttributesDs"/>-->
+                    <buttonsPanel>
+                        <button action="schemaTabLdapAttributeTable.create"
+                                caption="msg://ldapAttributesTableCreate"/>
+                        <button action="schemaTabLdapAttributeTable.remove"
+                                caption="msg://ldapAttributesTableRemove"/>
+                        <button id="updateLdapSchemaUserAttributesButton"
+                                caption="msg://refreshLdapAttributesButtonCaption"
+                                invoke="onUpdateLdapSchemaUserAttributesButtonClick"/>
+                    </buttonsPanel>
+                </table>
+                <buttonsPanel>
+                    <frame screen="editWindowActions"
+                           width="AUTO"/>
+                    <button id="testConnection"
+                            caption="msg://testConnectionButtonCaption"
+                            invoke="onTestConnectionClick"/>
+                </buttonsPanel>
+            </groupBox>
+        </scrollBox>
+    </layout>
+</window>

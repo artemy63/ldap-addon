@@ -18,10 +18,11 @@
 <menu-config xmlns="http://schemas.haulmont.com/cuba/menu.xsd">
     <menu id="application-ldap"
           insertBefore="administration">
-        <item screen="ldap$LdapPropertiesConfig.edit"/>
-        <item screen="ldap$matchingRuleScreen"/>
-        <item screen="ldap$UserSynchronizationLog.browse"/>
         <item screen="ldap$LdapPropertiesConfig.browse"
               caption="mainMsg://menu_config.ldap$LdapPropertiesConfig.browse"/>
+<!--        <item screen="ldap$LdapPropertiesConfig.edit"/>-->
+<!--        todo-->
+        <item screen="ldap$matchingRuleScreen"/>
+        <item screen="ldap$UserSynchronizationLog.browse"/>
     </menu>
 </menu-config>

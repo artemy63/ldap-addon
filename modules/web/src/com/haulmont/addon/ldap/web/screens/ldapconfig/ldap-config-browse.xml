@@ -16,7 +16,6 @@
   -->
 
 <window xmlns="http://schemas.haulmont.com/cuba/screen/window.xsd"
-        xmlns:c="http://schemas.haulmont.com/cuba/screen/jpql_condition.xsd"
         caption="msg://ldapConfigBrowse.caption"
         focusComponent="ldapConfigsTable"
         messagesPack="com.haulmont.addon.ldap.web.screens.ldapconfig">
@@ -24,8 +23,9 @@
         <collection id="ldapConfigsDc"
                     class="com.haulmont.addon.ldap.entity.LdapConfig">
             <view extends="_minimal">
-                <property name="schemaBase"/>
-                <property name="userBase"/>
+                <property name="contextSourceUrl"/>
+                <property name="contextSourceBase"/>
+                <property name="contextSourceUserName"/>
                 <property name="sysTenantId"/>
             </view>
             <loader id="ldapConfigsDl">
@@ -45,10 +45,13 @@
             <actions>
                 <action id="create" type="create"/>
                 <action id="edit" type="edit"/>
+                <!--                todo do I need a remove action ? -->
             </actions>
             <columns>
-                <column id="schemaBase"/>
-                <column id="userBase"/>
+                <column id="contextSourceUrl"/>
+                <column id="contextSourceBase"/>
+                <column id="contextSourceUserName"/>
+                <column id="sysTenantId"/>
             </columns>
             <rowsCount/>
             <buttonsPanel id="buttonsPanel"

@@ -39,17 +39,17 @@ public class LdapConfig extends BaseUuidEntity implements Versioned, Updatable {
     @Column(name = "DEFAULT_ACCESS_GROUP_NAME")
     protected String defaultAccessGroupName;
 
-    @Transient
-    @MetaProperty
+    @Column(name = "CONTEXT_SOURCE_BASE")
     protected String contextSourceBase;
 
-    @Transient
-    @MetaProperty
+    @Column(name = "CONTEXT_SOURCE_URL")
+    protected String contextSourceUrl;
+
+    @Column(name = "CONTEXT_SOURCE_USER_NAME")
     protected String contextSourceUserName;
 
-    @Transient
-    @MetaProperty
-    protected String contextSourceUrl;
+    @Column(name = "CONTEXT_SOURCE_PASSWORD")
+    protected String contextSourcePassword;
 
     @Column(name = "LDAP_USER_OBJECT_CLASSES", length = 2000)
     private String ldapUserObjectClasses;
@@ -155,7 +155,6 @@ public class LdapConfig extends BaseUuidEntity implements Versioned, Updatable {
         return contextSourceUserName;
     }
 
-
     public void setContextSourceUrl(String contextSourceUrl) {
         this.contextSourceUrl = contextSourceUrl;
     }
@@ -164,6 +163,13 @@ public class LdapConfig extends BaseUuidEntity implements Versioned, Updatable {
         return contextSourceUrl;
     }
 
+    public String getContextSourcePassword() {
+        return contextSourcePassword;
+    }
+
+    public void setContextSourcePassword(String contextSourcePassword) {
+        this.contextSourcePassword = contextSourcePassword;
+    }
 
     public String getInactiveUserAttribute() {
         return inactiveUserAttribute;
@@ -172,7 +178,6 @@ public class LdapConfig extends BaseUuidEntity implements Versioned, Updatable {
     public void setInactiveUserAttribute(String inactiveUserAttribute) {
         this.inactiveUserAttribute = inactiveUserAttribute;
     }
-
 
     public void setSchemaBase(String schemaBase) {
         this.schemaBase = schemaBase;

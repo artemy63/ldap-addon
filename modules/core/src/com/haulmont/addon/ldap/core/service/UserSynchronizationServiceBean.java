@@ -107,10 +107,14 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
                                                         LdapUser cachedLdapUser,
                                                         User cachedCubaUser,
                                                         List<CommonMatchingRule> cachedMatchingRules) {
+        // TODO: 24.03.2022 how to use tenant there
         try {
-            String modeMessage = saveSynchronizationResult ? messages.formatMessage(UserSynchronizationServiceBean.class, "saveMode") :
-                    messages.formatMessage(UserSynchronizationServiceBean.class, "notSaveMode");
-            SynchronizationMode modeType = saveSynchronizationResult ? SynchronizationMode.SAVE_DATA : SynchronizationMode.NOT_SAVE_DATA;
+            String modeMessage = saveSynchronizationResult
+                    ? messages.formatMessage(UserSynchronizationServiceBean.class, "saveMode")
+                    : messages.formatMessage(UserSynchronizationServiceBean.class, "notSaveMode");
+            SynchronizationMode modeType = saveSynchronizationResult
+                    ? SynchronizationMode.SAVE_DATA
+                    : SynchronizationMode.NOT_SAVE_DATA;
 
             // get LDAP user entity
             LdapUser ldapUser = orElseGet(cachedLdapUser, () -> ldapUserDao.getLdapUser(login));
@@ -250,7 +254,8 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
                                               String modeMessage,
                                               SynchronizationMode modeType) {
         if (PersistenceHelper.isNew(syncUser) || ldapPropertiesConfig.getSynchronizeCommonInfoFromLdap()) {
-            LdapConfig ldapConfig = ldapConfigDao.getLdapConfig();
+            // TODO: 24.03.2022
+            LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
             if (!Strings.isNullOrEmpty(ldapConfig.getEmailAttribute())) {
                 syncUser.setEmail(ldapMatchingRuleContext.getLdapUser().getEmail());
             }
@@ -284,6 +289,7 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
 
         if (PersistenceHelper.isNew(syncUser)) {//only for new users
             if (!syncUser.getActive()) {//set default group to new disabled user
+//                todo define user tenant and syynch with group
                 syncUser.setGroup(groupDao.getDefaultGroup());
             }
             logger.info(messages.formatMessage(UserSynchronizationServiceBean.class, "userCreatedFromLdap", login, modeMessage));

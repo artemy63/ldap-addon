@@ -40,7 +40,7 @@ public class GroupDao {
 
     @Transactional(readOnly = true)
     public Group getDefaultGroup() {
-        LdapConfig ldapConfig = ldapConfigDao.getLdapConfig();
+        LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
         TypedQuery<Group> query = persistence.getEntityManager()
                 .createQuery("select gr from sec$Group gr where gr.name = :name", Group.class);
         query.setParameter("name", ldapConfig.getDefaultAccessGroupName());

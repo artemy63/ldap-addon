@@ -38,10 +38,10 @@ public class LdapConfigDao {
     @Inject
     private LdapPropertiesConfig ldapContextConfig;
 
-    @Transactional(readOnly = true)
-    public LdapConfig getLdapConfig() {
+    @Transactional
+    public LdapConfig getDefaultLdapConfig() {
         TypedQuery<LdapConfig> query = persistence.getEntityManager()
-                .createQuery("select lc from ldap$LdapPropertiesConfig lc", LdapConfig.class);
+                .createQuery("select lc from ldap$LdapPropertiesConfig lc where lc.sysTenantId is null", LdapConfig.class);
         LdapConfig lc = query.getSingleResult();
 
         lc.setContextSourceUrl(ldapContextConfig.getContextSourceUrl());
@@ -49,6 +49,13 @@ public class LdapConfigDao {
         lc.setContextSourceUserName(ldapContextConfig.getContextSourceUserName());
 
         return lc;
+    }
 
+    @Transactional
+    public LdapConfig getLdapConfigByTenant(String tenantId) {
+        TypedQuery<LdapConfig> query = persistence.getEntityManager()
+                .createQuery("select lc from ldap$LdapPropertiesConfig lc where lc.sysTenantId = :tenantParam", LdapConfig.class);
+        query.setParameter("tenantParam", tenantId);
+        return query.getSingleResult();
     }
 }

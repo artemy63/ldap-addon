@@ -78,6 +78,7 @@ public class LdapAddonLoginProvider implements LoginProvider, Ordered {
         }
 
         if (RememberMeCredentials.class.isAssignableFrom(credentials.getClass())) {
+            // TODO: 24.03.2022 do it with tenant
             UserSynchronizationResultDto userSynchronizationResult =
                     userSynchronizationService.synchronizeUser(((RememberMeCredentials) credentials).getLogin(), true, null, null, null);
             if (userSynchronizationResult.isInactiveUser()) {
@@ -89,10 +90,14 @@ public class LdapAddonLoginProvider implements LoginProvider, Ordered {
 
         LoginPasswordCredentials loginPasswordCredentials = (LoginPasswordCredentials) credentials;
 
+        Map<String, Object> params = loginPasswordCredentials.getParams();
+        Object tenantIdParam = params.get("tenantId");
+
         authUserService.ldapAuth(
                 loginPasswordCredentials.getLogin(),
                 loginPasswordCredentials.getPassword(),
-                loginPasswordCredentials.getLocale());
+                loginPasswordCredentials.getLocale(),
+                tenantIdParam == null ? null : (String)tenantIdParam);
         UserSynchronizationResultDto userSynchronizationResult
                 = userSynchronizationService.synchronizeUser(loginPasswordCredentials.getLogin(), true, null, null, null);
         if (userSynchronizationResult.isInactiveUser()) {

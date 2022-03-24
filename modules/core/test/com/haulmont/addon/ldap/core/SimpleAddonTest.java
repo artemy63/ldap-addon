@@ -70,7 +70,7 @@ public class SimpleAddonTest {
             persistence.getEntityManager().flush();
 
             //Change default access group in ldap config
-            LdapConfig ldapConfig = ldapConfigDao.getLdapConfig();
+            LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
             assertNotNull(ldapConfig);
             ldapConfig.setDefaultAccessGroupName("Test group");
             ldapConfig = daoHelper.persistOrMerge(ldapConfig);

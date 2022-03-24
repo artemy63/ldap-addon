@@ -16,6 +16,7 @@
 
 package com.haulmont.addon.ldap.core.service;
 
+import com.google.common.base.Strings;
 import com.haulmont.addon.ldap.config.LdapPropertiesConfig;
 import com.haulmont.addon.ldap.core.dao.CubaUserDao;
 import com.haulmont.addon.ldap.core.dao.LdapConfigDao;
@@ -25,7 +26,6 @@ import com.haulmont.addon.ldap.core.rule.LdapMatchingRuleContext;
 import com.haulmont.addon.ldap.core.spring.AnonymousLdapContextSource;
 import com.haulmont.addon.ldap.core.utils.LdapHelper;
 import com.haulmont.addon.ldap.dto.GroovyScriptTestResultDto;
-import com.haulmont.addon.ldap.dto.LdapContextDto;
 import com.haulmont.addon.ldap.dto.LdapUser;
 import com.haulmont.addon.ldap.entity.LdapConfig;
 import com.haulmont.addon.ldap.service.LdapService;
@@ -41,6 +41,7 @@ import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.support.LdapUtils;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.naming.NamingEnumeration;
 import javax.naming.directory.Attributes;
@@ -101,12 +102,23 @@ public class LdapServiceBean implements LdapService {
     }
 
     @Override
-    public String testConnection() {
-
-        String url = ldapContextConfig.getContextSourceUrl();
-        String base = ldapContextConfig.getContextSourceBase();
-        String userDn = ldapContextConfig.getContextSourceUserName();
-        String password = ldapContextConfig.getContextSourcePassword();
+    public String testConnection(@Nullable String tenantId) {
+        String url;
+        String base;
+        String userDn;
+        String password;
+        if (Strings.isNullOrEmpty(tenantId)) {
+            url = ldapContextConfig.getContextSourceUrl();
+            base = ldapContextConfig.getContextSourceBase();
+            userDn = ldapContextConfig.getContextSourceUserName();
+            password = ldapContextConfig.getContextSourcePassword();
+        } else {
+            //todo find ldap config by tenant
+            url = ldapContextConfig.getContextSourceUrl();
+            base = ldapContextConfig.getContextSourceBase();
+            userDn = ldapContextConfig.getContextSourceUserName();
+            password = ldapContextConfig.getContextSourcePassword();
+        }
 
         LdapContextSource ldapContextSource = null;
         DirContext dirContext = null;
@@ -195,8 +207,8 @@ public class LdapServiceBean implements LdapService {
     }
 
     @Override
-    public LdapConfig getLdapConfig() {
-        return ldapConfigDao.getLdapConfig();
+    public LdapConfig getDefaultConfig() {
+        return ldapConfigDao.getDefaultLdapConfig();
     }
 
 }

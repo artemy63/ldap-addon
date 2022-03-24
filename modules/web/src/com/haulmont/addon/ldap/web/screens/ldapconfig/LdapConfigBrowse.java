@@ -16,12 +16,44 @@
 
 package com.haulmont.addon.ldap.web.screens.ldapconfig;
 
-import com.haulmont.cuba.gui.screen.*;
+import com.google.common.base.Strings;
 import com.haulmont.addon.ldap.entity.LdapConfig;
+import com.haulmont.addon.ldap.service.LdapService;
+import com.haulmont.cuba.gui.model.CollectionContainer;
+import com.haulmont.cuba.gui.model.CollectionLoader;
+import com.haulmont.cuba.gui.screen.*;
+
+import javax.inject.Inject;
 
 @UiController("ldap$LdapPropertiesConfig.browse")
 @UiDescriptor("ldap-config-browse.xml")
 @LookupComponent("ldapConfigsTable")
-@LoadDataBeforeShow
 public class LdapConfigBrowse extends StandardLookup<LdapConfig> {
+
+    @Inject
+    private CollectionLoader<LdapConfig> ldapConfigsDl;
+    @Inject
+    private LdapService ldapService;
+
+    @Inject
+    private CollectionContainer<LdapConfig> ldapConfigsDc;
+
+    @Subscribe
+    public void onBeforeShow(BeforeShowEvent event) {
+        ldapConfigsDl.load();
+
+        //fill missing attributes for default ldapConfig
+        ldapConfigsDc.getItems().stream()
+                .filter(ldapConfig -> Strings.isNullOrEmpty(ldapConfig.getSysTenantId()))
+                .findFirst()
+                .ifPresent(ldapConfig -> {
+                    LdapConfig defaultConfig = ldapService.getDefaultConfig();
+                    ldapConfig.setContextSourceUrl(defaultConfig.getContextSourceUrl());
+                    ldapConfig.setContextSourceBase(defaultConfig.getContextSourceBase());
+                    ldapConfig.setContextSourceUserName(defaultConfig.getContextSourceUserName());
+                });
+    }
+
+
+
 }
