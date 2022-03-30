@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package com.haulmont.addon.ldap.web.screens.ldapconfig;
+package com.haulmont.addon.ldap.service;
 
-import com.haulmont.addon.ldap.entity.LdapConfig;
-import com.haulmont.cuba.gui.screen.*;
+import java.util.List;
 
-@UiController("ldap$LdapPropertiesConfig.browse")
-@UiDescriptor("ldap-config-browse.xml")
-@LookupComponent("ldapConfigsTable")
-@LoadDataBeforeShow
-public class LdapConfigBrowse extends StandardLookup<LdapConfig> {
+public interface TenantProviderService {
+    String NAME = "ldap_TenantProviderService";
+
+    List<String> getTenantIds();
 }

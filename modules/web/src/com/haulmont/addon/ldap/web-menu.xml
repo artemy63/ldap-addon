@@ -20,9 +20,6 @@
           insertBefore="administration">
         <item screen="ldap$LdapPropertiesConfig.browse"
               caption="mainMsg://menu_config.ldap$LdapPropertiesConfig.browse"/>
-<!--        <item screen="ldap$LdapPropertiesConfig.edit"/>-->
-<!--        todo-->
-        <item screen="ldap$matchingRuleScreen"/>
         <item screen="ldap$UserSynchronizationLog.browse"/>
     </menu>
 </menu-config>

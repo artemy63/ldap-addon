@@ -19,7 +19,6 @@ package com.haulmont.addon.ldap.service;
 import com.haulmont.addon.ldap.dto.GroovyScriptTestResultDto;
 import com.haulmont.addon.ldap.entity.LdapConfig;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 public interface LdapService {
@@ -29,26 +28,16 @@ public interface LdapService {
     /**
      * Tests connection to LDAP server.
      */
-    String testConnection(String tenantId);
+    String testConnection(String url, String base, String userDn, String password);
 
     /**
      * Loads attributes of provided classes from the LDAP schema
      */
-    void fillLdapUserAttributes(String schemaBase, String objectClasses, String objectClassName, String attributeClassName);
-
-    /**
-     * Returns a list of LDAP attributes loaded using {@link #fillLdapUserAttributes(String, String, String, String)}
-     */
-    List<String> getLdapUserAttributesNames();
+    List<String> getLdapUserAttributes(LdapConfig ldapConfig);
 
     /**
      * Tests a groovy script
      */
-    GroovyScriptTestResultDto testGroovyScript(String groovyScript, String login);
-
-    /**
-     * Returns a configuration of the LDAP addon
-     */
-    LdapConfig getDefaultConfig();
+    GroovyScriptTestResultDto testGroovyScript(String groovyScript, String login, String tenantId);
 
 }

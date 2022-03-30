@@ -16,10 +16,7 @@
 
 package com.haulmont.addon.ldap.core.dao;
 
-import com.google.common.base.Strings;
-import com.haulmont.addon.ldap.config.LdapPropertiesConfig;
 import com.haulmont.addon.ldap.core.spring.events.LdapFailedAuthenticationEvent;
-import com.haulmont.addon.ldap.core.utils.LdapConstants;
 import com.haulmont.addon.ldap.core.utils.LdapUserMapper;
 import com.haulmont.addon.ldap.dto.LdapUser;
 import com.haulmont.addon.ldap.entity.LdapConfig;
@@ -30,8 +27,6 @@ import com.haulmont.cuba.security.global.LoginException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.lang.Nullable;
 import org.springframework.ldap.CommunicationException;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
@@ -46,6 +41,7 @@ import org.springframework.ldap.query.SearchScope;
 import org.springframework.ldap.support.LdapUtils;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
@@ -67,30 +63,13 @@ public class LdapUserDao {
     public final static String NAME = "ldap_LdapUserDao";
 
     @Inject
-    @Qualifier(LdapConstants.LDAP_TEMPLATE_BEAN_NAME)
-    private LdapTemplate ldapTemplate;
-
-    @Inject
     private Messages messages;
-
     @Inject
     private LdapConfigDao ldapConfigDao;
     @Inject
     private Events events;
 
-    @Inject
-    private LdapPropertiesConfig ldapPropertiesConfig;
-
-    private Map<String, ActiveDirectoryDomain> adDomainsCache = new HashMap<>();
-
-    public LdapUser getLdapUser(String login) {
-        List<LdapUser> userSearchResult = PreWindows2000Login.match(login)
-                ? searchUserInDomain(login)
-                : searchUserContextSourceBase(login);
-        return userSearchResult.stream()
-                .reduce(createOnlyOneObjectReducer(createMultipleLoginsException(login)))
-                .orElse(null);
-    }
+    private final Map<String, ActiveDirectoryDomain> adDomainsCache = new HashMap<>();
 
     public LdapUser getLdapUser(String login, String tenantId) {
         List<LdapUser> userSearchResult = PreWindows2000Login.match(login)
@@ -101,56 +80,23 @@ public class LdapUserDao {
                 .orElse(null);
     }
 
-    private List<LdapUser> searchUserInDomain(String login) {
-        PreWindows2000Login oldStyleLogin = new PreWindows2000Login(login);
-        return getActiveDirectoryDomain(oldStyleLogin.domainNetBiosName, LdapUserDao::throwWrongDomainNameException)
-                .searchUser(samAccountNameFilter(oldStyleLogin.samAccountName));
-    }
-
-    // TODO: 24.03.2022
     private List<LdapUser> searchUserInDomain(String login, String tenantId) {
         PreWindows2000Login oldStyleLogin = new PreWindows2000Login(login);
-        return getActiveDirectoryDomain(oldStyleLogin.domainNetBiosName, LdapUserDao::throwWrongDomainNameException)
-                .searchUser(samAccountNameFilter(oldStyleLogin.samAccountName));
-    }
-
-    private List<LdapUser> searchUserContextSourceBase(String login) {
-        LdapQuery query = LdapQueryBuilder.query()
-                .searchScope(SearchScope.SUBTREE)
-                .timeLimit(10_000)
-                .countLimit(1)
-                .filter(createUserBaseAndLoginFilter(login, ldapConfigDao.getDefaultLdapConfig()));
-
-        // TODO: 24.03.2022
-        return ldapTemplate.search(query, new LdapUserMapper(ldapConfigDao.getDefaultLdapConfig()));
+        return getActiveDirectoryDomain(oldStyleLogin.domainNetBiosName, tenantId, LdapUserDao::throwWrongDomainNameException)
+                .searchUser(samAccountNameFilter(oldStyleLogin.samAccountName), tenantId);
     }
 
     private List<LdapUser> searchUserContextSourceBase(String login, String tenantId) {
+        LdapConfig ldapConfig = ldapConfigDao.getLdapConfigByTenant(tenantId);
         LdapQuery query = LdapQueryBuilder.query()
                 .searchScope(SearchScope.SUBTREE)
                 .timeLimit(10_000)
                 .countLimit(1)
-                .filter(createUserBaseAndLoginFilter(login, ldapConfigDao.getLdapConfigByTenant(tenantId)));
+                .filter(createUserBaseAndLoginFilter(login, ldapConfig));
 
-        return ldapTemplate(tenantId).search(query, new LdapUserMapper(ldapConfigDao.getLdapConfigByTenant(tenantId)));
+        return ldapTemplate(tenantId).search(query, new LdapUserMapper(ldapConfig));
     }
 
-    public LdapUser findLdapUserByFilter(List<SimpleRuleCondition> conditions, String login) {
-        LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
-        Filter filter = parseSimpleRuleConditions(conditions);
-        if (filter == null) {
-            return null;
-        }
-        LdapQuery query = LdapQueryBuilder.query()
-                .searchScope(SearchScope.SUBTREE)
-                .timeLimit(10_000)
-                .countLimit(1)
-                .filter(addUserBaseAndLoginFilter(login, filter));
-        List<LdapUser> list = ldapTemplate.search(query, new LdapUserMapper(ldapConfig));
-        return (list == null || list.isEmpty()) ? null : list.get(0);
-    }
-
-    // TODO: 24.03.2022
     public LdapUser findLdapUserByFilter(List<SimpleRuleCondition> conditions, String login, String tenantId) {
         LdapConfig ldapConfig = ldapConfigDao.getLdapConfigByTenant(tenantId);
         Filter filter = parseSimpleRuleConditions(conditions);
@@ -166,16 +112,9 @@ public class LdapUserDao {
         return (list == null || list.isEmpty()) ? null : list.get(0);
     }
 
-    public void authenticateLdapUser(String login, String password, Locale messagesLocale) throws LoginException {
-        authenticateLdapUser(login, password, messagesLocale, null);
-    }
-
     public void authenticateLdapUser(String login, String password, Locale messagesLocale, String tenantId) throws LoginException {
         try {
-            boolean authenticated = Strings.isNullOrEmpty(tenantId)
-                    ? isAuthenticated(login, password)
-                    : isAuthenticated(login, password, tenantId);
-
+            boolean authenticated = isAuthenticated(login, password, tenantId);
             if (authenticated) {
                 String loginSuccessMessage = messages.formatMessage(LdapUserDao.class, "successLdapLogin", messagesLocale, login);
                 logger.warn(loginSuccessMessage);
@@ -200,31 +139,13 @@ public class LdapUserDao {
         }
     }
 
-    private boolean isAuthenticated(String login, String password) {
-        boolean authenticated;
-        if (PreWindows2000Login.match(login)) {
-            PreWindows2000Login oldStyleLogin = new PreWindows2000Login(login);
-
-            authenticated =
-                    getActiveDirectoryDomain(oldStyleLogin.domainNetBiosName, LdapUserDao::throwWrongDomainNameException)
-                            .authenticate(samAccountNameFilter(oldStyleLogin.samAccountName), password);
-        } else {
-            authenticated = ldapTemplate.authenticate(
-                    LdapUtils.emptyLdapName(),
-                    createUserBaseAndLoginFilter(login, ldapConfigDao.getDefaultLdapConfig()).encode(),
-                    password);
-        }
-        return authenticated;
-    }
-
     private boolean isAuthenticated(String login, String password, String tenantId) {
         boolean authenticated;
         if (PreWindows2000Login.match(login)) {
             PreWindows2000Login oldStyleLogin = new PreWindows2000Login(login);
-
             authenticated =
-                    getActiveDirectoryDomain(oldStyleLogin.domainNetBiosName, LdapUserDao::throwWrongDomainNameException)
-                            .authenticate(samAccountNameFilter(oldStyleLogin.samAccountName), password);
+                    getActiveDirectoryDomain(oldStyleLogin.domainNetBiosName, tenantId, LdapUserDao::throwWrongDomainNameException)
+                            .authenticate(samAccountNameFilter(oldStyleLogin.samAccountName), password, tenantId);
         } else {
             authenticated = ldapTemplate(tenantId).authenticate(
                     LdapUtils.emptyLdapName(),
@@ -260,12 +181,15 @@ public class LdapUserDao {
      * Collect Active Directory domain info by it's NetBIOS name
      */
     private ActiveDirectoryDomain getActiveDirectoryDomain(String domainNetBiosName,
+                                                           String tenantId,
                                                            @Nullable Consumer<String> notFoundCallback) {
         ActiveDirectoryDomain foundDomain = adDomainsCache.computeIfAbsent(domainNetBiosName, key -> {
-            List<ActiveDirectoryDomain> searchResult = ldapTemplate.search(
-                    LdapUtils.newLdapName("CN=Partitions,CN=Configuration"),
-                    new EqualsFilter("CN", key).encode(),
-                    ActiveDirectoryDomain::new);
+            List<ActiveDirectoryDomain> searchResult = ldapTemplate(tenantId)
+                    .search(
+                            LdapUtils.newLdapName("CN=Partitions,CN=Configuration"),
+                            new EqualsFilter("CN", key).encode(),
+                            ActiveDirectoryDomain::new
+                    );
             return searchResult.isEmpty() ? null : searchResult.get(0);
         });
 
@@ -274,16 +198,6 @@ public class LdapUserDao {
         }
 
         return foundDomain;
-    }
-
-    public List<LdapUser> getLdapUsers(List<String> logins) {
-        // TODO: 24.03.2022
-        LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
-        LdapQuery query = LdapQueryBuilder.query()
-                .searchScope(SearchScope.SUBTREE)
-                .timeLimit(10_000)
-                .filter(createUserBaseAndLoginsFilter(logins));
-        return ldapTemplate.search(query, new LdapUserMapper(ldapConfig));
     }
 
     public List<LdapUser> getLdapUsers(List<String> logins, String tenantId) {
@@ -295,9 +209,7 @@ public class LdapUserDao {
         return ldapTemplate(tenantId).search(query, new LdapUserMapper(ldapConfig));
     }
 
-
     private Filter createUserBaseAndLoginFilter(String login, LdapConfig ldapConfig) {
-        // TODO: 24.03.2022
         Filter ef = new EqualsFilter(ldapConfig.getLoginAttribute(), login);
         if (StringUtils.isEmpty(ldapConfig.getUserBase())) {
             return ef;
@@ -306,24 +218,6 @@ public class LdapUserDao {
         andFilter.and(ef);
         andFilter.and(new HardcodedFilter("(" + ldapConfig.getUserBase() + ")"));
 
-        return andFilter;
-    }
-
-    private Filter addUserBaseAndLoginFilter(String login, Filter filter) {
-        // TODO: 24.03.2022
-        LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
-        Filter resultFilter;
-        Filter ef = new EqualsFilter(ldapConfig.getLoginAttribute(), login);
-        resultFilter = ef;
-        if (StringUtils.isNotEmpty(ldapConfig.getUserBase())) {
-            AndFilter andFilter = new AndFilter();
-            andFilter.and(ef);
-            andFilter.and(new HardcodedFilter("(" + ldapConfig.getUserBase() + ")"));
-            resultFilter = andFilter;
-        }
-        AndFilter andFilter = new AndFilter();
-        andFilter.and(resultFilter);
-        andFilter.and(filter);
         return andFilter;
     }
 
@@ -361,25 +255,6 @@ public class LdapUserDao {
             }
         }
         return prevFilter;
-    }
-
-    private Filter createUserBaseAndLoginsFilter(List<String> logins) {
-        // TODO: 24.03.2022
-        LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
-        ContainerCriteria containerCriteria = LdapQueryBuilder.query().where(ldapConfig.getLoginAttribute()).is(logins.get(0));
-        for (String login : logins.subList(1, logins.size())) {
-            containerCriteria = containerCriteria.or(ldapConfig.getLoginAttribute()).is(login);
-        }
-
-        Filter ef = containerCriteria.filter();
-        if (StringUtils.isEmpty(ldapConfig.getUserBase())) {
-            return ef;
-        }
-        AndFilter andFilter = new AndFilter();
-        andFilter.and(ef);
-        andFilter.and(new HardcodedFilter("(" + ldapConfig.getUserBase() + ")"));
-
-        return andFilter;
     }
 
     private Filter createUserBaseAndLoginsFilter(List<String> logins, String tenantId) {
@@ -449,11 +324,12 @@ public class LdapUserDao {
             return "ldap://" + dnsRoot;
         }
 
-        LdapContextSource getLdapContextSource() {
+        LdapContextSource getLdapContextSource(String tenantId) {
             if (ldapContextSource == null) {
+                LdapConfig ldapConfigByTenant = ldapConfigDao.getLdapConfigByTenant(tenantId);
                 ldapContextSource = new LdapContextSource();
-                ldapContextSource.setUserDn(ldapPropertiesConfig.getContextSourceUserName());
-                ldapContextSource.setPassword(ldapPropertiesConfig.getContextSourcePassword());
+                ldapContextSource.setUserDn(ldapConfigByTenant.getContextSourceUserName());
+                ldapContextSource.setPassword(ldapConfigByTenant.getContextSourcePassword());
                 ldapContextSource.setUrl(getUrl());
                 ldapContextSource.setBase(nCName);
                 ldapContextSource.afterPropertiesSet();
@@ -461,23 +337,27 @@ public class LdapUserDao {
             return ldapContextSource;
         }
 
-        LdapTemplate getLdapTemplate() {
+        LdapTemplate getLdapTemplate(String tenantId) {
             if (ldapTemplate == null) {
-                ldapTemplate = new LdapTemplate(getLdapContextSource());
+                ldapTemplate = new LdapTemplate(getLdapContextSource(tenantId));
             }
             return ldapTemplate;
         }
 
-        List<LdapUser> searchUser(String query) {
-            return getLdapTemplate().search(CN_USERS, query, new LdapUserMapper(ldapConfigDao.getDefaultLdapConfig()));
+        List<LdapUser> searchUser(String query, String tenantId) {
+            return getLdapTemplate(tenantId)
+                    .search(CN_USERS, query, new LdapUserMapper(ldapConfigDao.getLdapConfigByTenant(tenantId)));
         }
 
-        // TODO: 24.03.2022
-        boolean authenticate(String filter, String password) throws LoginException {
-            return getLdapTemplate().authenticate(CN_USERS, filter, password,
-                    (ctx, ldapEntryIdentification) -> {
-                    },
-                    e -> logger.error(String.format("Could not auth user by query: %s", filter), e));
+        boolean authenticate(String filter, String password, String tenantId) throws LoginException {
+            return getLdapTemplate(tenantId)
+                    .authenticate(
+                            CN_USERS,
+                            filter,
+                            password,
+                            (ctx, ldapEntryIdentification) -> {
+                            },
+                            e -> logger.error(String.format("Could not auth user by query: %s", filter), e));
         }
     }
 

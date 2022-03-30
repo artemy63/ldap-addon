@@ -16,14 +16,16 @@
 
 package com.haulmont.addon.ldap.entity;
 
-import com.haulmont.chile.core.annotations.MetaProperty;
+import com.haulmont.chile.core.annotations.Composition;
 import com.haulmont.cuba.core.entity.BaseUuidEntity;
 import com.haulmont.cuba.core.entity.Updatable;
 import com.haulmont.cuba.core.entity.Versioned;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Configuration of the LDAP addon
@@ -35,6 +37,10 @@ public class LdapConfig extends BaseUuidEntity implements Versioned, Updatable {
 
     @Column(name = "SCHEMA_BASE")
     private String schemaBase;
+
+    @Composition
+    @OneToMany(mappedBy = "ldapConfig")
+    protected List<LdapUserAttribute> ldapUserAttributes = new ArrayList<>();
 
     @Column(name = "DEFAULT_ACCESS_GROUP_NAME")
     protected String defaultAccessGroupName;
@@ -112,6 +118,14 @@ public class LdapConfig extends BaseUuidEntity implements Versioned, Updatable {
     @SystemLevel
     @Column(name = "SYS_TENANT_ID")
     private String sysTenantId;
+
+    public List<LdapUserAttribute> getLdapUserAttributes() {
+        return ldapUserAttributes;
+    }
+
+    public void setLdapUserAttributes(List<LdapUserAttribute> ldapUserAttributes) {
+        this.ldapUserAttributes = ldapUserAttributes;
+    }
 
     public void setDefaultAccessGroupName(String defaultAccessGroupName) {
         this.defaultAccessGroupName = defaultAccessGroupName;
@@ -291,7 +305,6 @@ public class LdapConfig extends BaseUuidEntity implements Versioned, Updatable {
     public String getUserBase() {
         return userBase;
     }
-
 
     @Override
     public void setUpdateTs(Date updateTs) {

@@ -30,7 +30,5 @@ public interface AuthUserService {
      *
      * @throws LoginException if a user with provided credentials does not exist in LDAP.
      */
-    void ldapAuth(String login, String password, Locale messagesLocale) throws LoginException;
-
     void ldapAuth(String login, String password, Locale messagesLocale, @Nullable String tenantId) throws LoginException;
 }

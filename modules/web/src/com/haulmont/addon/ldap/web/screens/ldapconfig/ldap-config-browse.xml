@@ -39,13 +39,16 @@
                 width="800"/>
     <layout expand="ldapConfigsTable"
             spacing="true">
+        <filter applyTo="ldapConfigsTable" dataLoader="ldapConfigsDl">
+            <properties include=".*"/>
+        </filter>
         <groupTable id="ldapConfigsTable"
                     width="100%"
                     dataContainer="ldapConfigsDc">
             <actions>
                 <action id="create" type="create"/>
                 <action id="edit" type="edit"/>
-                <!--                todo do I need a remove action ? -->
+                <action id="remove" type="remove"/>
             </actions>
             <columns>
                 <column id="contextSourceUrl"/>
@@ -58,6 +61,7 @@
                           alwaysVisible="true">
                 <button id="createBtn" action="ldapConfigsTable.create"/>
                 <button id="editBtn" action="ldapConfigsTable.edit"/>
+                <button id="removeBtn" action="ldapConfigsTable.remove"/>
             </buttonsPanel>
         </groupTable>
         <hbox id="lookupActions" spacing="true" visible="false">

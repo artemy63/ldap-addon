@@ -21,7 +21,6 @@ import com.haulmont.addon.ldap.service.AuthUserService;
 import com.haulmont.cuba.security.global.LoginException;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.Locale;
 
@@ -32,12 +31,7 @@ public class AuthUserServiceBean implements AuthUserService {
     private LdapUserDao ldapUserDao;
 
     @Override
-    public void ldapAuth(String login, String password, Locale messagesLocale) throws LoginException {
-        ldapUserDao.authenticateLdapUser(login, password, messagesLocale);
-    }
-
-    @Override
-    public void ldapAuth(String login, String password, Locale messagesLocale, @Nullable String tenantId) throws LoginException {
+    public void ldapAuth(String login, String password, Locale messagesLocale, String tenantId) throws LoginException {
         ldapUserDao.authenticateLdapUser(login, password, messagesLocale, tenantId);
     }
 }

@@ -78,9 +78,12 @@ public class LdapAddonLoginProvider implements LoginProvider, Ordered {
         }
 
         if (RememberMeCredentials.class.isAssignableFrom(credentials.getClass())) {
-            // TODO: 24.03.2022 do it with tenant
+            // TODO: 25.03.2022 check me
+            RememberMeCredentials rememberMeCredentials = (RememberMeCredentials) credentials;
+            Map<String, Object> params = rememberMeCredentials.getParams();
+            String tenantId = params.get("tenantId") == null ? null : (String) params.get("tenantId");
             UserSynchronizationResultDto userSynchronizationResult =
-                    userSynchronizationService.synchronizeUser(((RememberMeCredentials) credentials).getLogin(), true, null, null, null);
+                    userSynchronizationService.synchronizeUser(rememberMeCredentials.getLogin(), tenantId, true, null, null, null);
             if (userSynchronizationResult.isInactiveUser()) {
                 throw new LoginException(messages.formatMessage(LdapAddonLoginProvider.class,
                         "LoginException.InactiveUserLoginAttempt", ((RememberMeCredentials) credentials).getLocale()));
@@ -91,15 +94,15 @@ public class LdapAddonLoginProvider implements LoginProvider, Ordered {
         LoginPasswordCredentials loginPasswordCredentials = (LoginPasswordCredentials) credentials;
 
         Map<String, Object> params = loginPasswordCredentials.getParams();
-        Object tenantIdParam = params.get("tenantId");
+        String tenantId = params.get("tenantId") == null ? null : (String) params.get("tenantId");
 
         authUserService.ldapAuth(
                 loginPasswordCredentials.getLogin(),
                 loginPasswordCredentials.getPassword(),
                 loginPasswordCredentials.getLocale(),
-                tenantIdParam == null ? null : (String)tenantIdParam);
-        UserSynchronizationResultDto userSynchronizationResult
-                = userSynchronizationService.synchronizeUser(loginPasswordCredentials.getLogin(), true, null, null, null);
+                tenantId);
+        UserSynchronizationResultDto userSynchronizationResult = userSynchronizationService
+                .synchronizeUser(loginPasswordCredentials.getLogin(), tenantId, true, null, null, null);
         if (userSynchronizationResult.isInactiveUser()) {
             throw new LoginException(messages.formatMessage(LdapAddonLoginProvider.class,
                     "LoginException.InactiveUserLoginAttempt", loginPasswordCredentials.getLocale()));

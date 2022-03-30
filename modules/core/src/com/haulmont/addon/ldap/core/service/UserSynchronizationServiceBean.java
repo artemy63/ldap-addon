@@ -103,11 +103,11 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
 
     @Override
     public UserSynchronizationResultDto synchronizeUser(String login,
+                                                        String tenantId,
                                                         boolean saveSynchronizationResult,
                                                         LdapUser cachedLdapUser,
                                                         User cachedCubaUser,
                                                         List<CommonMatchingRule> cachedMatchingRules) {
-        // TODO: 24.03.2022 how to use tenant there
         try {
             String modeMessage = saveSynchronizationResult
                     ? messages.formatMessage(UserSynchronizationServiceBean.class, "saveMode")
@@ -117,7 +117,7 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
                     : SynchronizationMode.NOT_SAVE_DATA;
 
             // get LDAP user entity
-            LdapUser ldapUser = orElseGet(cachedLdapUser, () -> ldapUserDao.getLdapUser(login));
+            LdapUser ldapUser = orElseGet(cachedLdapUser, () -> ldapUserDao.getLdapUser(login, tenantId));
             if (ldapUser == null) {
                 return new UserSynchronizationResultDto();
             }
@@ -130,7 +130,6 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
             User originalCubaUser = metadataTools.copy(cubaUser);
             originalCubaUser.setUserRoles(new ArrayList<>(cubaUser.getUserRoles()));
 
-            // Create matching rule context
             LdapMatchingRuleContext ldapMatchingRuleContext = new LdapMatchingRuleContext(ldapUser, cubaUser,
                     matchingRuleUtils.getRoles(originalCubaUser), originalCubaUser.getGroup());
 
@@ -143,11 +142,11 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
             }
 
             if (cubaUserEnabled || ldapUserEnabled) {
-                copyLdapAttributesToCubaUser(ldapMatchingRuleContext, cubaUser, login, modeMessage, modeType);
+                copyLdapAttributesToCubaUser(ldapMatchingRuleContext, cubaUser, login, modeMessage, modeType, tenantId);
             }
 
             if (ldapUserEnabled) {
-                List<CommonMatchingRule> matchingRules = orElseGet(cachedMatchingRules, matchingRuleDao::getMatchingRules);
+                List<CommonMatchingRule> matchingRules = orElseGet(cachedMatchingRules, () -> matchingRuleDao.getMatchingRules(tenantId));
                 events.publish(new BeforeUserRolesAndAccessGroupUpdatedFromLdapEvent(this, ldapMatchingRuleContext, cubaUser, modeType));
                 matchingRuleApplier.applyMatchingRules(matchingRules, ldapMatchingRuleContext, originalCubaUser);
                 events.publish(new AfterUserRolesAndAccessGroupUpdatedFromLdapEvent(this, ldapMatchingRuleContext, cubaUser, modeType));
@@ -170,9 +169,9 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
     }
 
     @Override
-    public TestUserSynchronizationDto testUserSynchronization(String login, List<AbstractCommonMatchingRule> rulesToApply) {
+    public TestUserSynchronizationDto testUserSynchronization(String login, String tenantId, List<AbstractCommonMatchingRule> rulesToApply) {
         TestUserSynchronizationDto testUserSynchronizationDto = new TestUserSynchronizationDto();
-        LdapUser ldapUser = ldapUserDao.getLdapUser(login);
+        LdapUser ldapUser = ldapUserDao.getLdapUser(login, tenantId);
         if (ldapUser == null) return testUserSynchronizationDto;
 
         testUserSynchronizationDto.setUserExistsInLdap(true);
@@ -229,8 +228,10 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
     @Transactional
     public void synchronizeUsersFromLdap(List<User> cubaUsers, List<LdapUser> ldapUsers, List<CommonMatchingRule> matchingRules) {
         for (LdapUser ldapUser : ldapUsers) {
-            User cubaUser = cubaUsers.stream().filter(cu -> cu.getLogin().equals(ldapUser.getLogin())).findAny().
-                    orElseThrow(() -> (new RuntimeException("Synchronization: No CUBA user with login " + ldapUser.getLogin())));
+            User cubaUser = cubaUsers.stream()
+                    .filter(cu -> cu.getLogin().equals(ldapUser.getLogin()))
+                    .findAny()
+                    .orElseThrow(() -> new RuntimeException("Synchronization: No CUBA user with login " + ldapUser.getLogin()));
             if (ldapPropertiesConfig.getUserSynchronizationOnlyActiveProperty()) {
                 if (ldapUser.getDisabled() && cubaUser.getActive()) {
                     cubaUser.setActive(false);
@@ -242,7 +243,7 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
                     cubaUserDao.save(cubaUser);
                 }
             } else {
-                synchronizeUser(ldapUser.getLogin(), true, ldapUser, cubaUser, matchingRules);
+                synchronizeUser(ldapUser.getLogin(), cubaUser.getSysTenantId(), true, ldapUser, cubaUser, matchingRules);
             }
         }
 
@@ -252,10 +253,10 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
                                               User syncUser,
                                               String login,
                                               String modeMessage,
-                                              SynchronizationMode modeType) {
+                                              SynchronizationMode modeType,
+                                              String tenantId) {
         if (PersistenceHelper.isNew(syncUser) || ldapPropertiesConfig.getSynchronizeCommonInfoFromLdap()) {
-            // TODO: 24.03.2022
-            LdapConfig ldapConfig = ldapConfigDao.getDefaultLdapConfig();
+            LdapConfig ldapConfig = ldapConfigDao.getLdapConfigByTenant(tenantId);
             if (!Strings.isNullOrEmpty(ldapConfig.getEmailAttribute())) {
                 syncUser.setEmail(ldapMatchingRuleContext.getLdapUser().getEmail());
             }
@@ -289,8 +290,7 @@ public class UserSynchronizationServiceBean implements UserSynchronizationServic
 
         if (PersistenceHelper.isNew(syncUser)) {//only for new users
             if (!syncUser.getActive()) {//set default group to new disabled user
-//                todo define user tenant and syynch with group
-                syncUser.setGroup(groupDao.getDefaultGroup());
+                syncUser.setGroup(groupDao.getAccessGroup(tenantId));
             }
             logger.info(messages.formatMessage(UserSynchronizationServiceBean.class, "userCreatedFromLdap", login, modeMessage));
             events.publish(new UserCreatedFromLdapEvent(this, ldapMatchingRuleContext, syncUser, modeType));
