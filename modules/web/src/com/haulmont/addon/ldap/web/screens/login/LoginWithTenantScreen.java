@@ -26,6 +26,7 @@ import com.haulmont.cuba.security.global.LoginException;
 import com.haulmont.cuba.web.app.login.LoginScreen;
 
 import javax.inject.Inject;
+import java.util.Map;
 
 
 @UiController("login-with-tenant")
@@ -41,13 +42,25 @@ public class LoginWithTenantScreen extends LoginScreen {
     protected void onInit(InitEvent event) {
         super.onInit(event);
 
-        tenantField.setOptionsList(tenantProviderService.getTenantIds());
+        Map<String, String> urlParams = urlRouting.getState().getParams();
+        if (urlParams.get("tenantId") != null) {
+            tenantField.setVisible(false);
+        } else {
+            tenantField.setOptionsList(tenantProviderService.getTenantIds());
+        }
     }
 
     @Override
     protected void doLogin(Credentials credentials) throws LoginException {
+        String tenantId;
+        if (urlRouting.getState().getParams().get("tenantId") != null) {
+            tenantId = urlRouting.getState().getParams().get("tenantId");
+        } else {
+            tenantId = tenantField.getValue();
+        }
+
         if (credentials instanceof LoginPasswordCredentials) {
-            ((LoginPasswordCredentials) credentials).getParams().put("tenantId", tenantField.getValue());
+            ((LoginPasswordCredentials) credentials).getParams().put("tenantId", tenantId);
         }
 
         super.doLogin(credentials);
